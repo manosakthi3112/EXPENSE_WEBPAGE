@@ -5,16 +5,12 @@ A web-based personal finance application built with Flask and MongoDB. This tool
 ## Table of Contents
 
 - [Key Features](#key-features)
-- [Live Demo](#live-demo)
 - [Technology Stack](#technology-stack)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation & Setup](#installation--setup)
 - [Running the Application](#running-the-application)
 - [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
-
 ## Key Features
 
 -   🔐 **User Authentication**: Secure user registration and login system with hashed passwords using `bcrypt`.
@@ -29,11 +25,6 @@ A web-based personal finance application built with Flask and MongoDB. This tool
 -   ⚙️ **Environment-Based Configuration**: Securely manage database credentials and secret keys using a `.env` file.
 -   ✅ **Form Validation**: Server-side validation to ensure data integrity (e.g., amounts must be positive).
 
-## Live Demo
-
-*(Optional: Add a link to a live, deployed version of your application if you have one.)*
-
-`[Link to your live demo]`
 
 ## Technology Stack
 
