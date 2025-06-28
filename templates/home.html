@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Overview - {{ user_name or 'Dashboard' }}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Custom CSS for AI Developer Theme -->
+    <style>
+        /* AI Developer Theme Colors & Fonts */
+        :root {
+            --ai-bg-primary: #0d1117; /* Deepest dark, like a code editor */
+            --ai-bg-secondary: #161b22; /* Slightly lighter for cards/forms */
+            --ai-border-color: #30363d; /* Subtle border */
+            --ai-text-primary: #c9d1d9; /* Light grey text */
+            --ai-text-secondary: #8b949e; /* Dimmer grey text */
+            --ai-accent-blue: #58a6ff; /* Vibrant blue for links/buttons/highlights */
+            --ai-accent-blue-hover: #79c0ff; /* Lighter blue on hover */
+            --ai-accent-green: #3fb950; /* Green for success */
+            --ai-accent-red: #f85149; /* Red for errors */
+            --ai-font-sans: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            --ai-font-mono: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
+        }
+
+        /* --- GLOBAL STYLES --- */
+        body {
+            background-color: var(--ai-bg-primary);
+            background-image: radial-gradient(circle at top, var(--ai-bg-secondary) 0%, var(--ai-bg-primary) 70%);
+            color: var(--ai-text-primary);
+            font-family: var(--ai-font-sans);
+        }
+        
+        /* --- NAVBAR --- */
+        .navbar {
+            background-color: rgba(16, 17, 22, 0.75) !important; /* Semi-transparent */
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--ai-border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+        }
+
+        .navbar-brand, .nav-link {
+            color: var(--ai-text-primary) !important;
+            font-weight: 500;
+            transition: color 0.2s ease, text-shadow 0.2s ease;
+        }
+        .navbar-brand {
+             color: var(--ai-accent-blue) !important;
+        }
+        .nav-link:hover, .navbar-brand:hover {
+            color: var(--ai-accent-blue-hover) !important;
+            text-shadow: 0 0 5px rgba(88, 166, 255, 0.5);
+        }
+
+        /* --- HEADINGS --- */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--ai-text-primary);
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        h1 .text-info {
+            background: linear-gradient(45deg, var(--ai-accent-blue-hover), var(--ai-accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        
+        /* --- CARDS --- */
+        .card {
+            background-color: var(--ai-bg-secondary);
+            border: 1px solid var(--ai-border-color);
+            color: var(--ai-text-primary);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            background-color: rgba(22, 27, 34, 0.5);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(88, 166, 255, 0.5);
+            box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.3), 0 0 15px rgba(88, 166, 255, 0.1);
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid var(--ai-border-color);
+            color: var(--ai-text-primary);
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+        }
+        .card-header .fas {
+            color: var(--ai-accent-blue);
+        }
+
+        /* --- REDESIGNED STAT CARDS --- */
+        .stat-card {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem;
+            overflow: hidden;
+            position: relative;
+        }
+        .stat-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--ai-accent-blue);
+            transition: width 0.3s ease;
+        }
+        .stat-card.expense:before {
+            background: var(--ai-accent-red);
+        }
+        .stat-card:hover:before {
+            width: 100%;
+            opacity: 0.1;
+        }
+
+        .stat-card-icon {
+            font-size: 1.75rem;
+            color: var(--ai-text-secondary);
+            margin-right: 1rem;
+            z-index: 1;
+        }
+        .stat-card-content { z-index: 1; }
+        
+        .stat-card h4 {
+            margin-bottom: 0.25rem;
+            color: var(--ai-text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .amount {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--ai-text-primary);
+            font-family: var(--ai-font-mono);
+            line-height: 1;
+        }
+        .stat-card .no-data {
+            font-size: 1rem;
+            color: var(--ai-text-secondary);
+            font-style: italic;
+        }
+        .stat-card.expense .amount { color: var(--ai-accent-red); }
+        .stat-card.revenue .amount { color: var(--ai-accent-blue); }
+
+        /* --- CHART STYLING --- */
+        .chart-card-body {
+            position: relative;
+            padding: 1.5rem;
+            height: 350px;
+        }
+        @media (max-width: 992px) { .chart-card-body { height: 300px; } }
+        
+        /* --- TABLES & FILTERS --- */
+        .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--ai-text-primary);
+            --bs-table-striped-bg: #1c2128;
+            --bs-table-hover-bg: rgba(88, 166, 255, 0.08);
+            --bs-table-border-color: var(--ai-border-color);
+            border: none;
+        }
+        
+        .table thead th {
+            color: var(--ai-text-secondary);
+            border-bottom: 2px solid var(--ai-border-color);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        .table tbody tr {
+            border-bottom: 1px solid var(--ai-border-color);
+            transition: background-color 0.2s ease;
+        }
+        .table tbody tr:last-child {
+            border-bottom: none;
+        }
+        .table td {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            vertical-align: middle;
+            font-family: var(--ai-font-mono);
+        }
+        .table tbody tr:hover {
+            background-color: var(--bs-table-hover-bg);
+            cursor: pointer;
+        }
+
+        /* Filter Controls */
+        .filter-controls .btn-group .btn {
+            border-radius: 0;
+            border: none;
+            border-bottom: 2px solid transparent;
+            background: transparent;
+            color: var(--ai-text-secondary);
+            transition: all 0.2s ease;
+        }
+        .filter-controls .btn-group .btn:hover {
+             background: rgba(88, 166, 255, 0.1);
+             color: var(--ai-accent-blue-hover);
+        }
+        .filter-controls .btn-group .btn:focus, .filter-controls .btn-group .btn.active {
+            box-shadow: none;
+            color: var(--ai-accent-blue);
+            border-bottom-color: var(--ai-accent-blue);
+        }
+        .filter-controls .btn-outline-secondary {
+            color: var(--ai-text-secondary);
+            border-color: var(--ai-border-color);
+        }
+        .filter-controls .btn-outline-secondary:hover {
+            background: var(--ai-border-color);
+            color: var(--ai-text-primary);
+        }
+        
+        .form-control-dark {
+            background-color: var(--ai-bg-primary);
+            color: var(--ai-text-primary);
+            border: 1px solid var(--ai-border-color);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .form-control-dark::placeholder { color: var(--ai-text-secondary); }
+        .form-control-dark:focus {
+            background-color: var(--ai-bg-primary);
+            border-color: var(--ai-accent-blue);
+            box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25);
+            color: var(--ai-text-primary);
+        }
+        .input-group-text {
+            background-color: var(--ai-bg-secondary) !important;
+            color: var(--ai-text-secondary) !important;
+            border: 1px solid var(--ai-border-color) !important;
+        }
+        .form-control-dark[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8);
+        }
+
+        .pagination-info {
+            color: var(--ai-text-secondary);
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        .btn-secondary {
+            background-color: var(--ai-bg-secondary);
+            border-color: var(--ai-border-color);
+        }
+        .btn-secondary:hover {
+            background-color: var(--ai-border-color);
+            border-color: var(--ai-accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot me-2"></i> Financial Dashboard
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-plus-circle me-1"></i> Add Data
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4 px-lg-4">
+        {% if user_name %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1>Welcome, <span class="text-info">{{ user_name }}</span>!</h1>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Summary Stat Cards Section -->
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card revenue">
+                    <div class="stat-card-icon"><i class="fas fa-calendar-day"></i></div>
+                    <div class="stat-card-content">
+                        <h4>Today's Revenue</h4>
+                        {% if day_total_revenue is not none %}<div class="amount">₹{{day_total_revenue}}</div>{% else %}<div class="no-data">No Data</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card expense">
+                    <div class="stat-card-icon"><i class="fas fa-calendar-day"></i></div>
+                    <div class="stat-card-content">
+                        <h4>Today's Expense</h4>
+                        {% if day_total_expense is not none %}<div class="amount">₹{{day_total_expense}}</div>{% else %}<div class="no-data">No Data</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card revenue">
+                    <div class="stat-card-icon"><i class="fas fa-calendar-week"></i></div>
+                    <div class="stat-card-content">
+                        <h4>This Week's Revenue</h4>
+                        {% if week_total_revenue is not none %}<div class="amount">₹{{week_total_revenue}}</div>{% else %}<div class="no-data">No Data</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card expense">
+                    <div class="stat-card-icon"><i class="fas fa-calendar-week"></i></div>
+                    <div class="stat-card-content">
+                        <h4>This Week's Expense</h4>
+                        {% if week_total_expense is not none %}<div class="amount">₹{{week_total_expense}}</div>{% else %}<div class="no-data">No Data</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card revenue">
+                    <div class="stat-card-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="stat-card-content">
+                        <h4>This Month's Revenue</h4>
+                        {% if month_total_revenue is not none %}<div class="amount">₹{{month_total_revenue}}</div>{% else %}<div class="no-data">No Data</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card expense">
+                    <div class="stat-card-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="stat-card-content">
+                        <h4>This Month's Expense</h4>
+                        {% if month_total_expense is not none %}<div class="amount">₹{{month_total_expense}}</div>{% else %}<div class="no-data">No Data</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card revenue">
+                    <div class="stat-card-icon"><i class="fas fa-wallet"></i></div>
+                    <div class="stat-card-content">
+                        <h4>Total Revenue</h4>
+                        {% if total_revenue is not none %}<div class="amount">₹{{total_revenue}}</div>{% else %}<div class="no-data">No Data</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card expense">
+                    <div class="stat-card-icon"><i class="fas fa-credit-card"></i></div>
+                    <div class="stat-card-content">
+                        <h4>Total Expense</h4>
+                        {% if total_expense is not none %}<div class="amount">₹{{total_expense}}</div>{% else %}<div class="no-data">No Data</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header"><i class="fas fa-chart-area me-2"></i>Monthly Revenue & Expense</div>
+                    <div class="card-body chart-card-body">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header"><i class="fas fa-chart-pie me-2"></i>Weekly Expense Breakdown</div>
+                    <div class="card-body chart-card-body">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+             <div class="col-12">
+                <div class="card">
+                    <div class="card-header"><i class="fas fa-chart-bar me-2"></i>Today's Revenue & Expense</div>
+                    <div class="card-body chart-card-body">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Tables Section -->
+        <div class="row g-4">
+            <!-- Revenue Data Card -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h5 mb-0"><i class="fas fa-chart-line me-2"></i> Revenue Data</h2>
+                    </div>
+                    <div class="card-body filter-controls">
+                        <!-- Filter Controls for Revenue Table -->
+                        <div class="row g-2 mb-3 align-items-center">
+                            <div class="col-12">
+                                <input type="text" id="revenueSearchInput" class="form-control form-control-dark" placeholder="Search by Category or Item...">
+                            </div>
+                            <div class="col-12 col-md">
+                                <div class="input-group">
+                                    <span class="input-group-text">From</span>
+                                    <input type="date" id="revenueDateFrom" class="form-control form-control-dark">
+                                </div>
+                            </div>
+                            <div class="col-12 col-md">
+                                <div class="input-group">
+                                    <span class="input-group-text">To</span>
+                                    <input type="date" id="revenueDateTo" class="form-control form-control-dark">
+                                </div>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm" id="revenueFilterToday">Today</button>
+                                    <button class="btn btn-sm" id="revenueFilterWeek">Week</button>
+                                    <button class="btn btn-sm" id="revenueFilterMonth">Month</button>
+                                    <button class="btn btn-sm" id="revenueFilterYear">Year</button>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary" id="revenueClearFilters">Clear</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table" id="revenueTable">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-calendar-alt me-1"></i> Date & Time</th>
+                                        <th><i class="fas fa-tags me-1"></i> Category</th>
+                                        <th><i class="fas fa-cube me-1"></i> Item</th>
+                                        <th><i class="fas fa-sack-dollar me-1"></i> Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% if revenue_data %}
+                                    {% for i in revenue_data %}
+                                        <tr>
+                                            <td>{{ i.timestamp }}</td>
+                                            <td>{{ i.category }}</td>
+                                            <td>{{ i.item }}</td>
+                                            <td>{{ i.amount }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="4" class="text-center p-4">No revenue data available.</td></tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <p class="pagination-info" id="revenuePaginationInfo"></p>
+                            <button class="btn btn-secondary" id="revenueShowMoreBtn" style="display: none;">Show More</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expense Data Card -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h5 mb-0"><i class="fas fa-coins me-2"></i> Expense Data</h2>
+                    </div>
+                    <div class="card-body filter-controls">
+                        <!-- Filter Controls for Expense Table -->
+                        <div class="row g-2 mb-3 align-items-center">
+                             <div class="col-12">
+                                <input type="text" id="expenseSearchInput" class="form-control form-control-dark" placeholder="Search by Category or Item...">
+                            </div>
+                            <div class="col-12 col-md">
+                                <div class="input-group">
+                                    <span class="input-group-text">From</span>
+                                    <input type="date" id="expenseDateFrom" class="form-control form-control-dark">
+                                </div>
+                            </div>
+                            <div class="col-12 col-md">
+                                <div class="input-group">
+                                    <span class="input-group-text">To</span>
+                                    <input type="date" id="expenseDateTo" class="form-control form-control-dark">
+                                </div>
+                            </div>
+                             <div class="col-12 d-flex justify-content-between">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm" id="expenseFilterToday">Today</button>
+                                    <button class="btn btn-sm" id="expenseFilterWeek">Week</button>
+                                    <button class="btn btn-sm" id="expenseFilterMonth">Month</button>
+                                    <button class="btn btn-sm" id="expenseFilterYear">Year</button>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary" id="expenseClearFilters">Clear</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table" id="expenseTable">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-calendar-alt me-1"></i> Date & Time</th>
+                                        <th><i class="fas fa-tags me-1"></i> Category</th>
+                                        <th><i class="fas fa-cube me-1"></i> Item</th>
+                                        <th><i class="fas fa-hand-holding-dollar me-1"></i> Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% if expenses_data %}
+                                    {% for j in expenses_data %}
+                                        <tr>
+                                            <td>{{ j.timestamp }}</td>
+                                            <td>{{ j.category }}</td>
+                                            <td>{{ j.item }}</td>
+                                            <td>{{ j.amount }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="4" class="text-center p-4">No expense data available.</td></tr>
+                                {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <p class="pagination-info" id="expensePaginationInfo"></p>
+                            <button class="btn btn-secondary" id="expenseShowMoreBtn" style="display: none;">Show More</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- ALL JAVASCRIPT IS UNCHANGED, AS REQUESTED ---
+        // (The original script for filtering and chart rendering follows)
+        document.addEventListener('DOMContentLoaded', function() {
+            const ROWS_PER_PAGE = 50;
+            let revenueVisibleRowCount = ROWS_PER_PAGE;
+            let expenseVisibleRowCount = ROWS_PER_PAGE;
+
+            function formatDateToYYYYMMDD(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function applyTableFilters(tablePrefix) {
+                const searchInput = document.getElementById(`${tablePrefix}SearchInput`);
+                const dateFromInput = document.getElementById(`${tablePrefix}DateFrom`);
+                const dateToInput = document.getElementById(`${tablePrefix}DateTo`);
+                const table = document.getElementById(`${tablePrefix}Table`);
+                const showMoreBtn = document.getElementById(`${tablePrefix}ShowMoreBtn`);
+                const paginationInfo = document.getElementById(`${tablePrefix}PaginationInfo`);
+
+                const textFilter = searchInput ? searchInput.value.toUpperCase() : "";
+                let dateFrom = dateFromInput && dateFromInput.value ? new Date(dateFromInput.value) : null;
+                let dateTo = dateToInput && dateToInput.value ? new Date(dateToInput.value) : null;
+
+                if (dateTo) { dateTo.setHours(23, 59, 59, 999); }
+
+                const tbody = table.querySelector('tbody');
+                if (!tbody) {
+                    if (paginationInfo) paginationInfo.textContent = `No data available.`;
+                    if (showMoreBtn) showMoreBtn.style.display = "none";
+                    return;
+                }
+                const tr = tbody.getElementsByTagName("tr");
+
+                if (tr.length === 1 && tr[0].getElementsByTagName("td")[0] && tr[0].getElementsByTagName("td")[0].colSpan === 4) {
+                    tr[0].style.display = "";
+                    if (paginationInfo) paginationInfo.textContent = `No data available.`;
+                    if (showMoreBtn) showMoreBtn.style.display = "none";
+                    return;
+                }
+
+                let visibleCount = 0;
+                let currentlyDisplayedCount = 0;
+
+                for (let i = 0; i < tr.length; i++) {
+                    let row = tr[i];
+                    let cells = row.getElementsByTagName("td");
+                    let textMatch = false;
+                    let dateMatch = true;
+
+                    if (textFilter === "") {
+                        textMatch = true;
+                    } else {
+                        for (let j = 1; j < cells.length-1; j++) { // Search category and item only
+                            if (cells[j]) {
+                                let cellText = cells[j].textContent || cells[j].innerText;
+                                if (cellText.toUpperCase().indexOf(textFilter) > -1) {
+                                    textMatch = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (dateFrom || dateTo) {
+                        const timestampCell = cells[0];
+                        if (timestampCell) {
+                            const rowDateStr = timestampCell.textContent || timestampCell.innerText;
+                            const parsedDateStr = rowDateStr.includes('T') ? rowDateStr : rowDateStr.replace(' ', 'T');
+                            const rowDate = new Date(parsedDateStr);
+                            if (isNaN(rowDate.getTime())) {
+                                dateMatch = false;
+                            } else {
+                                if (dateFrom && rowDate < dateFrom) { dateMatch = false; }
+                                if (dateTo && rowDate > dateTo) { dateMatch = false; }
+                            }
+                        } else { dateMatch = false; }
+                    }
+
+                    if (textMatch && dateMatch) {
+                        visibleCount++;
+                        let currentVisibleLimit = (tablePrefix === 'revenue') ? revenueVisibleRowCount : expenseVisibleRowCount;
+                        if (visibleCount <= currentVisibleLimit) {
+                            row.style.display = "";
+                            currentlyDisplayedCount++;
+                        } else {
+                            row.style.display = "none";
+                        }
+                    } else {
+                        row.style.display = "none";
+                    }
+                }
+
+                if (showMoreBtn) {
+                    showMoreBtn.style.display = (visibleCount > currentlyDisplayedCount) ? "inline-block" : "none";
+                }
+                if (paginationInfo) {
+                    if (tr.length === 0 || (tr.length === 1 && tr[0].getElementsByTagName("td")[0].colSpan === 4)) {
+                        paginationInfo.textContent = `No data available.`;
+                    } else if (visibleCount === 0) {
+                        paginationInfo.textContent = `No matching data found.`;
+                    } else {
+                        paginationInfo.textContent = `Showing ${currentlyDisplayedCount} of ${visibleCount} entries`;
+                    }
+                }
+            }
+            
+            function setDateRangeAndFilter(tablePrefix, daysInPeriod) {
+                const dateFromInput = document.getElementById(`${tablePrefix}DateFrom`);
+                const dateToInput = document.getElementById(`${tablePrefix}DateTo`);
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const startDate = new Date(today);
+
+                if (daysInPeriod > 0) {
+                    startDate.setDate(today.getDate() - (daysInPeriod - 1));
+                }
+
+                dateFromInput.value = formatDateToYYYYMMDD(startDate);
+                dateToInput.value = formatDateToYYYYMMDD(new Date());
+
+                if (tablePrefix === 'revenue') { revenueVisibleRowCount = ROWS_PER_PAGE; }
+                else if (tablePrefix === 'expense') { expenseVisibleRowCount = ROWS_PER_PAGE; }
+                applyTableFilters(tablePrefix);
+            }
+
+            function clearAllFilters(tablePrefix) {
+                document.getElementById(`${tablePrefix}SearchInput`).value = "";
+                document.getElementById(`${tablePrefix}DateFrom`).value = "";
+                document.getElementById(`${tablePrefix}DateTo`).value = "";
+
+                if (tablePrefix === 'revenue') { revenueVisibleRowCount = ROWS_PER_PAGE; }
+                else if (tablePrefix === 'expense') { expenseVisibleRowCount = ROWS_PER_PAGE; }
+                applyTableFilters(tablePrefix);
+            }
+
+            function showMoreRows(tablePrefix) {
+                if (tablePrefix === 'revenue') { revenueVisibleRowCount += ROWS_PER_PAGE; }
+                else if (tablePrefix === 'expense') { expenseVisibleRowCount += ROWS_PER_PAGE; }
+                applyTableFilters(tablePrefix);
+            }
+
+            // --- Event Listeners ---
+            document.getElementById('revenueSearchInput')?.addEventListener('keyup', () => applyTableFilters('revenue'));
+            document.getElementById('revenueDateFrom')?.addEventListener('change', () => applyTableFilters('revenue'));
+            document.getElementById('revenueDateTo')?.addEventListener('change', () => applyTableFilters('revenue'));
+            document.getElementById('revenueFilterToday')?.addEventListener('click', () => setDateRangeAndFilter('revenue', 1));
+            document.getElementById('revenueFilterWeek')?.addEventListener('click', () => setDateRangeAndFilter('revenue', 7));
+            document.getElementById('revenueFilterMonth')?.addEventListener('click', () => setDateRangeAndFilter('revenue', 30));
+            document.getElementById('revenueFilterYear')?.addEventListener('click', () => setDateRangeAndFilter('revenue', 365));
+            document.getElementById('revenueClearFilters')?.addEventListener('click', () => clearAllFilters('revenue'));
+            document.getElementById('revenueShowMoreBtn')?.addEventListener('click', () => showMoreRows('revenue'));
+
+            document.getElementById('expenseSearchInput')?.addEventListener('keyup', () => applyTableFilters('expense'));
+            document.getElementById('expenseDateFrom')?.addEventListener('change', () => applyTableFilters('expense'));
+            document.getElementById('expenseDateTo')?.addEventListener('change', () => applyTableFilters('expense'));
+            document.getElementById('expenseFilterToday')?.addEventListener('click', () => setDateRangeAndFilter('expense', 1));
+            document.getElementById('expenseFilterWeek')?.addEventListener('click', () => setDateRangeAndFilter('expense', 7));
+            document.getElementById('expenseFilterMonth')?.addEventListener('click', () => setDateRangeAndFilter('expense', 30));
+            document.getElementById('expenseFilterYear')?.addEventListener('click', () => setDateRangeAndFilter('expense', 365));
+            document.getElementById('expenseClearFilters')?.addEventListener('click', () => clearAllFilters('expense'));
+            document.getElementById('expenseShowMoreBtn')?.addEventListener('click', () => showMoreRows('expense'));
+
+            applyTableFilters('revenue');
+            applyTableFilters('expense');
+        });
+        
+        // --- Chart Rendering ---
+        // CORRECTED: Use `tojson` filter for robust data passing and provide default empty objects.
+        const lineChartData = {{ chart_data | tojson | safe }} || { labels: [], datasets: [] };
+        const barChartData = {{ bar_chart | tojson | safe }} || { labels: [], datasets: [] };
+        const pieChartData = {{ pieChartData | tojson | safe }} || { labels: [], values: [] };
+
+        // Common Chart.js options for the theme
+        const chartDefaultOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { 
+                    labels: { 
+                        color: '#FFFFFF', // Use pure white for max visibility on dark background
+                        usePointStyle: true, 
+                        boxHeight: 8 
+                    } 
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'var(--ai-border-color)' },
+                    ticks: { 
+                        color: '#FFFFFF' // Use pure white for max visibility on dark background
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { 
+                        color: '#FFFFFF' // Use pure white for max visibility on dark background
+                    }
+                }
+            }
+        };
+
+        function createLineChart() {
+            const ctx = document.getElementById('lineChart')?.getContext('2d');
+            if(!ctx) return;
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: lineChartData.labels,
+                    datasets: lineChartData.datasets.map(ds => ({
+                        ...ds,
+                        borderColor: ds.label === 'Revenue' ? 'var(--ai-accent-blue)' : 'var(--ai-accent-red)',
+                        backgroundColor: ds.label === 'Revenue' ? 'rgba(88, 166, 255, 0.15)' : 'rgba(248, 81, 73, 0.15)',
+                        tension: 0.4,
+                        pointRadius: 2,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: ds.label === 'Revenue' ? 'var(--ai-accent-blue)' : 'var(--ai-accent-red)',
+                        fill: true,
+                    }))
+                },
+                options: chartDefaultOptions
+            });
+        }
+
+       // In your HTML file, inside the <script> tag
+       // BUG FIX: Removed duplicated comment line from here.
+       function createBarChart() {
+           const ctx = document.getElementById('barChart')?.getContext('2d');
+           if (!ctx) return;
+
+           // This block is corrected.
+           // It now maps over the datasets to apply styling, just like the line chart function.
+           // This makes it robust even if the backend doesn't provide color information.
+           try {
+               new Chart(ctx, {
+                   type: 'bar',
+                   data: {
+                       labels: barChartData.labels,
+                       // THE FIX IS HERE: We map the datasets to add styling.
+                       datasets: barChartData.datasets.map(ds => ({
+                           ...ds, // Keep original data like label and data points
+                           // Assign colors based on the dataset's label
+                           backgroundColor: ds.label === 'Revenue' ? 'rgba(88, 166, 255, 0.7)' : 'rgba(248, 81, 73, 0.7)',
+                           borderColor: ds.label === 'Revenue' ? 'var(--ai-accent-blue)' : 'var(--ai-accent-red)',
+                           borderWidth: 1
+                       }))
+                   },
+                   options: chartDefaultOptions
+               });
+           } catch (e) {
+               console.error("Failed to create Bar Chart:", e);
+               // Fallback error message on the canvas
+               ctx.font = "16px var(--ai-font-sans)";
+               ctx.fillStyle = "var(--ai-text-secondary)";
+               ctx.textAlign = "center";
+               ctx.fillText("Error: Could not load Bar Chart data.", ctx.canvas.width / 2, ctx.canvas.height / 2);
+           }
+       }
+        function createPieChart() {
+            const ctx = document.getElementById('pieChart')?.getContext('2d');
+            if(!ctx) return;
+            new Chart(ctx, {
+                type: 'doughnut', /* Changed to doughnut for a more modern look */
+                data: {
+                    labels: pieChartData.labels,
+                    datasets: [{
+                        data: pieChartData.values,
+                        backgroundColor: [
+                            'rgba(88, 166, 255, 0.8)', 'rgba(63, 185, 80, 0.8)',
+                            'rgba(248, 81, 73, 0.8)', 'rgba(163, 113, 247, 0.8)',
+                            'rgba(227, 179, 65, 0.8)', 'rgba(0, 184, 201, 0.8)'
+                        ],
+                        borderColor: 'var(--ai-bg-secondary)',
+                        borderWidth: 4,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%', /* Adjusts the hole size in the doughnut chart */
+                    plugins: {
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                color: '#FFFFFF', // Use pure white for max visibility
+                                usePointStyle: true, 
+                                boxHeight: 8 
+                            } 
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if context exists before creating chart
+            if (document.getElementById('lineChart')) createLineChart();
+            if (document.getElementById('barChart')) createBarChart();
+            if (document.getElementById('pieChart')) createPieChart();
+        });
+    </script>
+</body>
+</html>

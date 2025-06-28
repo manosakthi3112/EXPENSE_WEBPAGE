@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Financial Data - AI Theme</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Custom CSS for AI Developer Theme -->
+    <style>
+        /* AI Developer Theme Colors & Fonts */
+        :root {
+            --ai-bg-primary: #0d1117; /* Deepest dark, like a code editor */
+            --ai-bg-secondary: #161b22; /* Slightly lighter for cards/forms */
+            --ai-border-color: #30363d; /* Subtle border */
+            --ai-text-primary: #c9d1d9; /* Light grey text */
+            --ai-accent-blue: #58a6ff; /* Vibrant blue for links/buttons/highlights */
+            --ai-accent-blue-hover: #79c0ff; /* Lighter blue on hover */
+            --ai-accent-green: #3fb950; /* Green for success */
+            --ai-accent-red: #f85149; /* Red for errors */
+            --ai-font-sans: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            --ai-font-mono: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
+        }
+
+        body {
+            background-color: var(--ai-bg-primary);
+            color: var(--ai-text-primary);
+            font-family: var(--ai-font-sans);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        h2 {
+            color: var(--ai-accent-blue); /* Headings use the vibrant blue */
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 2rem;
+            margin-top: 2rem;
+            text-shadow: 0 0 10px rgba(88, 166, 255, 0.4); /* Subtle glow effect */
+        }
+
+        .add-data-form {
+            background-color: var(--ai-bg-secondary);
+            border: 1px solid var(--ai-border-color);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.2); /* Soft blue glow for the form */
+            padding: 50px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            position: relative; /* For potential future pseudo-elements */
+        }
+
+        /* Input and Select Fields */
+        .form-select,
+        .form-control {
+            background-color: var(--ai-bg-primary); /* Darker background for controls */
+            color: var(--ai-text-primary);
+            border: 1px solid var(--ai-border-color);
+            font-family: var(--ai-font-mono); /* Monospace font for inputs */
+            font-size: 1.1rem; /* Slightly larger font */
+            padding: 0.75rem 1rem; /* Better padding */
+            height: auto; /* Let padding define height */
+            margin-bottom: 20px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-select:focus,
+        .form-control:focus {
+            background-color: var(--ai-bg-primary); /* Keep background same on focus */
+            color: var(--ai-text-primary);
+            border-color: var(--ai-accent-blue); /* Blue border on focus */
+            box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25); /* Blue glow on focus */
+            outline: none; /* Remove default outline */
+        }
+
+        .form-control::placeholder {
+            color: #6a737d; /* Slightly desaturated grey for placeholder */
+            opacity: 1;
+        }
+
+        .form-select option {
+            background-color: var(--ai-bg-secondary); /* Options match form background */
+            color: var(--ai-text-primary);
+        }
+        .form-select option:checked {
+            background-color: var(--ai-border-color); /* Highlight selected option */
+            color: var(--ai-accent-blue); /* Text color for selected option */
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--ai-accent-blue);
+            border-color: var(--ai-accent-blue);
+            color: var(--ai-bg-primary); /* Dark text on bright button */
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: var(--ai-accent-blue-hover);
+            border-color: var(--ai-accent-blue-hover);
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4); /* Stronger glow on hover */
+        }
+        .btn-primary:focus {
+            box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25);
+        }
+
+        .btn-secondary {
+            background-color: var(--ai-border-color); /* Muted dark for secondary */
+            border-color: var(--ai-border-color);
+            color: var(--ai-text-primary);
+            padding: 0.75rem 1.5rem;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #4a515e; /* Slightly lighter on hover */
+            border-color: #4a515e;
+            color: var(--ai-accent-blue); /* Accent color on hover */
+        }
+
+        /* Flash message toast styles */
+        .toast-container {
+            z-index: 9999;
+        }
+        .toast {
+            background-color: var(--ai-bg-secondary) !important; /* Consistent with form background */
+            border: 1px solid var(--ai-border-color);
+            color: var(--ai-text-primary) !important;
+        }
+        .toast.bg-success { background-color: var(--ai-accent-green) !important; }
+        .toast.bg-danger { background-color: var(--ai-accent-red) !important; }
+        .btn-close {
+            filter: invert(1); /* Makes the close button white */
+            color: var(--ai-text-primary); /* Ensure button color is readable */
+        }
+    </style>
+</head>
+<body>
+    <!-- Flash Messages (Toasts) Container -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="toast-container position-fixed top-0 end-0 p-3">
+                {% for category, message in messages %}
+                    <div class="toast text-white bg-{{ category }} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">{{ message }}</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="container mt-5">
+        <!-- Back Button -->
+        <div class="w-100 d-flex justify-content-start mb-4">
+            <a href="javascript:history.back()" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <h2><i class="fas fa-brain me-2"></i> Input Financial Data</h2>
+        <form method="POST" action="{{ url_for('submit') }}" class="add-data-form">
+            <select class="form-select" name="category" id="category" required>
+                <option disabled selected>Select Category</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
+
+            <select class="form-select" name="item" id="item" required>
+                <option disabled selected>Select Item</option>
+            </select>
+
+            <div class="mb-3" id="other_input" style="display: none;">
+                <input type="text" name="other_text" class="form-control" placeholder="Please specify other item...">
+            </div>
+
+            <div class="mb-3">
+                <input type="text" name="amount" class="form-control" placeholder="Enter the Amount (e.g., 123.45)" required pattern="^\d+(\.\d{1,2})?$">
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="fas fa-robot me-2"></i> Process Data</button>
+        </form>
+    </div>
+
+    <!-- jQuery (before Bootstrap JS) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Your Custom JavaScript -->
+    <script>
+        function toggleOtherInput() {
+            var selectedItem = document.getElementById("item").value;
+            var otherInputDiv = document.getElementById("other_input");
+            var otherTextInput = otherInputDiv.querySelector('input');
+
+            if (selectedItem === "Others") {
+                otherInputDiv.style.display = "block";
+                otherTextInput.setAttribute('required', 'required');
+            } else {
+                otherInputDiv.style.display = "none";
+                otherTextInput.removeAttribute('required');
+                otherTextInput.value = ''; // Clear input when hidden
+            }
+        }
+
+        $(document).ready(function () {
+            $('#category').change(function () {
+                var selectedCategory = $(this).val();
+                $.post('/get_items', { category: selectedCategory }, function (data) {
+                    $('#item').empty().append('<option disabled selected>Select Item</option>');
+                    data.forEach(function (itm) {
+                        $('#item').append(`<option value="${itm}">${itm}</option>`);
+                    });
+                    // Reset 'other_input' state when category changes
+                    toggleOtherInput(); // Call it to hide/clear if "Others" was previously selected
+                });
+            });
+
+            $('#item').change(function () {
+                toggleOtherInput();
+            });
+
+            // Initialize the state of 'other_input' on page load
+            toggleOtherInput();
+
+            // Show flash messages as Bootstrap toasts
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+            toastElList.map(function (toastEl) {
+                return new bootstrap.Toast(toastEl).show();
+            });
+        });
+    </script>
+</body>
+</html>
